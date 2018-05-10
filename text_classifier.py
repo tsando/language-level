@@ -366,17 +366,22 @@ if __name__ == "__main__":
     #        "and fell in love with John. John also feeled that Isabella was the woman he loved deeply. " \
     #        "To his joy, he could find his true love during his travel. In the end, they married together.\n    "
     #
-    # lmtzr = nltk.WordNetLemmatizer().lemmatize
     # lex_db = get_lex_db()
     #
     # tf = CTextFeatures(text)
     # tf.clean_text()
-    # tf.get_features(lex_db, lmtzr)
+    # tf.get_features(lex_db)
 
-    # ############      10k samples example     ############
+    # ############      k samples example     ############
 
-    # prepare_and_save_pickle(10000, '10k.p')
-    df = open_pickle('data/10k.p')
+    prepare = True
+    size = 10000
+    pickle_name = '{}k.p'.format(int(size / 1000))
+
+    if prepare:
+        prepare_and_save_pickle(size, pickle_name)
+
+    df = open_pickle('data/{}'.format(pickle_name))
 
     df, derived_features = build_features(df)
 
