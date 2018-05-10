@@ -47,7 +47,8 @@ class CTextFeatures:
 
     def tokenize(self):
         self.tokenizedd = True
-        self.tokens = nltk.word_tokenize(self.text)  # already normalised if used self.clean_text beforehand
+        # already normalised to lowercase if used self.clean_text beforehand
+        self.tokens = nltk.word_tokenize(self.text)
         self.ntokens = len(self.tokens)
         self.tokens_len = [len(x) for x in self.tokens]  # use isalpha to ignore punctuation?
         self.sent_tokens = nltk.sent_tokenize(self.text)
@@ -64,7 +65,8 @@ class CTextFeatures:
             'nchars': self.nchars,
             'ntokens': self.ntokens,
             'nsent': self.nsent,
-            'lexical_diversity': len(set(self.tokens)) / self.ntokens,  # number of distinct words wrt the total number of words
+            # number of distinct words wrt the total number of words
+            'lexical_diversity': len(set(self.tokens)) / self.ntokens,
             'avg_sentence_length': np.mean(self.sen_len),
             # 'sentence_length_by_tokens': np.mean(self.sen_len) / self.ntokens,
             # 'sentence_length_by_chars': np.mean(self.sen_len) / self.nchars,
@@ -73,12 +75,15 @@ class CTextFeatures:
             'avg_tokens_per_sent': self.ntokens / self.nsent,  # could be biased by stop-words?
         }
         # Lexical
-        if lex_db and lmtzr:
+        if lex_db:
             # join into single dict
             self.features = {**self.features, **self.get_lexical_features(lex_db, lmtzr)}
         return self.features
 
-    def get_lexical_features(self, lex_db, lmtzr):
+    def get_lexical_features(self, lex_db, lmtzr=None):
+
+        if not lmtzr:
+            lmtzr = nltk.WordNetLemmatizer().lemmatize
 
         if not self.tokenizedd:
             self.tokenize()
@@ -148,9 +153,10 @@ class CTextFeatures:
             word = t[0]
             pos_tag = t[1]
             try:
+                # Look for word in Kelly list
                 d = lex_db[word]
                 if len(d) > 1:
-                    # Only include first two chars of pos_tag
+                    # Look for right level depending on word POS tag
                     level = d[mappings[pos_tag]]
                 else:
                     level = list(d.values())[0]
@@ -375,21 +381,21 @@ if __name__ == "__main__":
     df, derived_features = build_features(df)
 
     # Select only these to benchmark vs v2
-    derived_features = ['ntokens',
-                        'nsent',
-                        'avg_tokens_per_sent',
-                        'lexical_diversity',
-                        'avg_token_length',
-                        'nlongwords',
-                        'nchars',
-                        'A1_inc',
-                        'A2_inc',
-                        'B1_inc',
-                        'B2_inc',
-                        'C1_inc',
-                        'C2_inc']
+    features = ['ntokens',
+                'nsent',
+                'avg_tokens_per_sent',
+                'lexical_diversity',
+                'avg_token_length',
+                'nlongwords',
+                'nchars',
+                'A1_inc',
+                'A2_inc',
+                'B1_inc',
+                'B2_inc',
+                'C1_inc',
+                'C2_inc']
 
-    X = df[derived_features]
+    X = df[features]
     y = df['writing_level']
     model = SVC()
 
