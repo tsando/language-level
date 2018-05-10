@@ -22,7 +22,7 @@ from sklearn.model_selection import GridSearchCV  # finding model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-from sklearn.naive_bayes import MultinomialNB
+#from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import RidgeClassifier
@@ -431,15 +431,21 @@ if __name__ == "__main__":
 
     # ############      k samples example     ############
 
-    prepare = True
+    prepare = False
+    build_features_flag = False
     size = 100000
     pickle_name = '{}k.p'.format(int(size / 1000))
+    csv_feature_name = '{}k_features.csv'.format(int(size / 1000))
 
     if prepare:
         prepare_and_save_pickle(size, pickle_name)
-    df = open_pickle('data/{}'.format(pickle_name))
 
-    df, derived_features = build_features(df)
+    if build_features_flag:
+        df = open_pickle('data/{}'.format(pickle_name))
+        df, derived_features = build_features(df)
+        df.to_csv('data/{}'.format(csv_feature_name))
+    else:
+        df = pd.read_csv('data/{}'.format(csv_feature_name))
 
     # Alternative target
     df['group'] = pd.cut(df['writing_level'], bins=[0, 3, 6, 9, 12, 15, 16],
@@ -464,6 +470,7 @@ if __name__ == "__main__":
 
     X = df[features]
     y = df['writing_level']  # switch for 'group' target
+    #y = df['group']
 
     models = [SVC(random_state=0),
               LogisticRegression(random_state=0),
@@ -471,7 +478,7 @@ if __name__ == "__main__":
               MLPClassifier(random_state=0),
               LinearSVC(random_state=0),
               DecisionTreeClassifier(random_state=0)]
-    model = models[5]
+    model = models[2]
 
     run_simple(X, y, model)
     #cross_val_pipeline(X, y, model)
