@@ -381,7 +381,7 @@ if __name__ == "__main__":
     # ############      k samples example     ############
 
     prepare = True
-    size = 50000
+    size = 10000
     pickle_name = '{}k.p'.format(int(size / 1000))
 
     if prepare:
