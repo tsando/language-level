@@ -233,11 +233,6 @@ def get_lex_db():
     return lex_db
 
 
-##############################################################
-#               PIPELINES
-##############################################################
-
-
 def build_features(df):
     # Get text features
     start_time = time.time()
@@ -252,6 +247,11 @@ def build_features(df):
     names = list((CTextFeatures(df.loc[0, 'text_cleaned']).get_features(lex_db, lmtzr)).keys())
     print_runtime(start_time)
     return df, names
+
+
+##############################################################
+#               PIPELINES
+##############################################################
 
 
 def run_simple(X, y, model):
@@ -391,6 +391,10 @@ if __name__ == "__main__":
 
     df, derived_features = build_features(df)
 
+    # Alternative target
+    df['group'] = pd.cut(df['writing_level'], bins=[0, 3, 6, 9, 12, 15, 16],
+                         labels=['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+
     # Select only these to benchmark vs v2
     features = ['ntokens',
                 'nsent',
@@ -407,7 +411,7 @@ if __name__ == "__main__":
                 'C2_inc']
 
     X = df[features]
-    y = df['writing_level']
+    y = df['writing_level']  # switch for 'group' target
     model = SVC()
 
     run_simple(X, y, model)
