@@ -255,6 +255,10 @@ def build_features(df):
 
 
 def run_simple(X, y, model):
+    print('Running model... took:')
+
+    start_time = time.time()
+
     # split the data with 50% in each set
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, train_size=0.8)
 
@@ -263,6 +267,8 @@ def run_simple(X, y, model):
 
     # evaluate the model on the second set of data
     y_test_model = model.predict(X_test)
+
+    print_runtime(start_time)
     print(accuracy_score(y_test, y_test_model))
 
 
