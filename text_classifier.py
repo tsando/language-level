@@ -8,9 +8,9 @@ import pickle as pickle
 import nltk
 from nltk.corpus import wordnet
 
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('wordnet')
+# nltk.download('punkt')
+# nltk.download('averaged_perceptron_tagger')
+# nltk.download('wordnet')
 from nltk.corpus import stopwords
 from nltk.corpus import wordnet as WN
 stop_words_en = set(stopwords.words('english'))
@@ -312,7 +312,7 @@ def grid_search_pipeline(X, y, models):
     print('Running pipeline... took:')
     start_time = time.time()
 
-    pipe = Pipeline([('clf', SVC())])
+    pipe = Pipeline([('clf', SVC(random_state=0))])
     param_grid = dict(clf=models)
 
     grid_search = GridSearchCV(pipe, param_grid=param_grid)  # investigate how to speed up
