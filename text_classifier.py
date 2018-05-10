@@ -245,7 +245,7 @@ def build_features(df):
     print('Cleaning text...')
     df['text_cleaned'] = df['text'].apply(lambda x: pd.Series(CTextFeatures(x).clean_text()))
 
-    print('Building features...')
+    print('Building features... took:')
     lmtzr = nltk.WordNetLemmatizer().lemmatize
     lex_db = get_lex_db()
     df = df.join(df['text_cleaned'].apply(lambda x: pd.Series(CTextFeatures(x).get_features(lex_db, lmtzr))))
@@ -328,7 +328,7 @@ def open_pickle(path_and_name):
 
 
 def prepare_and_save_pickle(size=100000, name='df.p', clean=False):
-    print('In prepare_and_save_pickle... took:')
+    print('Preparing pickle with {}k rows... took:'.format(int(size / 1000)))
     start_time = time.time()
 
     df = pd.read_csv('data/EFWritingData_parsed.csv')
@@ -375,7 +375,7 @@ if __name__ == "__main__":
     # ############      k samples example     ############
 
     prepare = True
-    size = 10000
+    size = 50000
     pickle_name = '{}k.p'.format(int(size / 1000))
 
     if prepare:
