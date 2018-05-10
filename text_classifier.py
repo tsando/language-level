@@ -8,6 +8,13 @@ import pickle as pickle
 import nltk
 from nltk.corpus import wordnet
 
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
+from nltk.corpus import stopwords
+from nltk.corpus import wordnet as WN
+stop_words_en = set(stopwords.words('english'))
+
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
@@ -18,6 +25,10 @@ from sklearn.metrics import accuracy_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import RidgeClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import LinearSVC
+from sklearn.tree import DecisionTreeClassifier
 
 
 ##############################################################
@@ -38,6 +49,7 @@ class CTextFeatures:
         self.sent_tokens = None
         self.nsent = None
         self.sen_len = None
+        self.n_spelling_mistakes = None
 
         self.features = None
         self.pos_tags = None
@@ -72,13 +84,24 @@ class CTextFeatures:
             # 'sentence_length_by_chars': np.mean(self.sen_len) / self.nchars,
             'avg_token_length': np.mean(self.tokens_len),
             'nlongwords': len([x for x in self.tokens_len if x > 10]),
-            'avg_tokens_per_sent': self.ntokens / self.nsent,  # could be biased by stop-words?
+            'avg_tokens_per_sent': self.ntokens / self.nsent,  # could be biased by stop-words?,
+            #'n_spelling_mistakes': self.get_spelling_mistakes(),
         }
         # Lexical
         if lex_db:
             # join into single dict
             self.features = {**self.features, **self.get_lexical_features(lex_db, lmtzr)}
         return self.features
+
+
+    def get_spelling_mistakes(self):
+        n_mistakes = 0
+        for word in self.tokens:
+            if not WN.synsets(word):
+                if word not in stop_words_en:
+                    n_mistakes += 1
+        return n_mistakes
+
 
     def get_lexical_features(self, lex_db, lmtzr=None):
 
@@ -272,6 +295,34 @@ def run_simple(X, y, model):
     print(accuracy_score(y_test, y_test_model))
 
 
+def cross_val_pipeline(X, y, model):
+    # Cross-validation
+    print('Running pipeline... took:')
+    start_time = time.time()
+
+    pipeline = make_pipeline(model)
+    scores = cross_val_score(pipeline, X, y, cv=4)  # investigate how to speed up
+
+    print_runtime(start_time)
+    print('scores={}\nmean={:.4f}'.format(scores, np.mean(scores)))
+
+
+def grid_search_pipeline(X, y, models):
+    # Gridsearch with CV
+    print('Running pipeline... took:')
+    start_time = time.time()
+
+    pipe = Pipeline([('clf', SVC())])
+    param_grid = dict(clf=models)
+
+    grid_search = GridSearchCV(pipe, param_grid=param_grid)  # investigate how to speed up
+    grid_search.fit(X, y)
+    print(grid_search.best_estimator_)
+    print(grid_search.best_score_)
+    print_runtime(start_time)
+    return grid_search
+
+
 ##############################################################
 #               HELPER FUNCTIONS
 ##############################################################
@@ -381,12 +432,11 @@ if __name__ == "__main__":
     # ############      k samples example     ############
 
     prepare = True
-    size = 10000
+    size = 100000
     pickle_name = '{}k.p'.format(int(size / 1000))
 
     if prepare:
         prepare_and_save_pickle(size, pickle_name)
-
     df = open_pickle('data/{}'.format(pickle_name))
 
     df, derived_features = build_features(df)
@@ -408,11 +458,23 @@ if __name__ == "__main__":
                 'B1_inc',
                 'B2_inc',
                 'C1_inc',
-                'C2_inc']
+                'C2_inc',
+                #'n_spelling_mistakes',
+                ]
 
     X = df[features]
     y = df['writing_level']  # switch for 'group' target
-    model = SVC()
+
+    models = [SVC(random_state=0),
+              LogisticRegression(random_state=0),
+              RidgeClassifier(random_state=0),
+              MLPClassifier(random_state=0),
+              LinearSVC(random_state=0),
+              DecisionTreeClassifier(random_state=0)]
+    model = models[5]
 
     run_simple(X, y, model)
+    #cross_val_pipeline(X, y, model)
+    #grid_search = grid_search_pipeline(X, y, models)
+
     pass
